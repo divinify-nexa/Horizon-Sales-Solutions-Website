@@ -206,43 +206,17 @@ section {
 }
 
 .nav-logo {
-  font-family: var(--font-display);
-  font-size: 1.4rem;
-  font-weight: 700;
-  color: var(--dark);
-  letter-spacing: -0.02em;
   display: flex;
   align-items: center;
-  gap: 10px;
 }
 
-.nav-logo .logo-mark {
-  width: 36px;
-  height: 36px;
-  background: linear-gradient(135deg, var(--burnt-orange), var(--burnt-orange-light));
-  border-radius: 50%;
-  position: relative;
-  overflow: hidden;
+.nav-logo .logo-img {
+  height: 48px;
+  width: auto;
 }
-.nav-logo .logo-mark::after {
-  content: '';
-  position: absolute;
-  bottom: 30%;
-  left: -10%;
-  right: -10%;
-  height: 2px;
-  background: var(--cream);
-  border-radius: 2px;
-}
-.nav-logo .logo-mark::before {
-  content: '';
-  position: absolute;
-  bottom: 24%;
-  left: 5%;
-  right: 5%;
-  height: 1.5px;
-  background: rgba(248, 243, 236, 0.5);
-  border-radius: 2px;
+
+.footer .nav-logo .logo-img {
+  filter: brightness(0) invert(0.9);
 }
 
 .nav-links {
