@@ -1108,6 +1108,221 @@ section {
 .footer-legal a:hover { color: rgba(248, 243, 236, 0.7); }
 
 /* ============================================
+   CULTURE PHOTO GRID
+   ============================================ */
+.culture-photos {
+  padding: 0;
+  overflow: hidden;
+}
+
+.photo-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 4px;
+}
+
+.photo-grid-item {
+  aspect-ratio: 1;
+  overflow: hidden;
+  position: relative;
+}
+
+.photo-grid-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.6s var(--ease-out);
+}
+
+.photo-grid-item:hover img {
+  transform: scale(1.06);
+}
+
+.photo-grid-item::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom, transparent 60%, rgba(44, 32, 22, 0.15));
+  pointer-events: none;
+}
+
+/* Photo Collage (3-col asymmetric) */
+.photo-collage {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-rows: auto auto;
+  gap: 12px;
+  width: var(--container);
+  margin: 0 auto;
+}
+
+.collage-item {
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  position: relative;
+}
+
+.collage-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.6s var(--ease-out);
+}
+
+.collage-item:hover img {
+  transform: scale(1.04);
+}
+
+.collage-item.tall {
+  grid-row: span 2;
+}
+
+.collage-item.wide {
+  grid-column: span 2;
+}
+
+/* Culture Banner (full-width photo with overlay) */
+.culture-banner {
+  position: relative;
+  height: 400px;
+  overflow: hidden;
+}
+
+.culture-banner img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.culture-banner::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to right, rgba(44, 32, 22, 0.6), rgba(44, 32, 22, 0.2));
+}
+
+.culture-banner-text {
+  position: absolute;
+  bottom: 48px;
+  left: 0;
+  right: 0;
+  z-index: 1;
+  width: var(--container);
+  margin: 0 auto;
+}
+
+.culture-banner-text h3 {
+  color: var(--cream);
+  font-size: clamp(1.4rem, 3vw, 2.2rem);
+  font-style: italic;
+}
+
+.culture-banner-text p {
+  color: rgba(248, 243, 236, 0.7);
+  margin-top: 8px;
+  font-size: 0.95rem;
+}
+
+/* Team photos with real images */
+.team-photo img,
+.team-full-photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center top;
+}
+
+/* Story/careers visual with real photo */
+.story-visual img,
+.careers-visual img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: var(--radius);
+}
+
+.careers-visual.has-photo {
+  background: none;
+}
+
+.careers-visual.has-photo .big-quote {
+  display: none;
+}
+
+/* Service detail visuals with photos */
+.service-detail-visual img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.service-detail-visual.has-photo {
+  background: none !important;
+}
+
+.service-detail-visual.has-photo::before {
+  display: none;
+}
+
+.service-detail-visual.has-photo .detail-icon {
+  display: none;
+}
+
+/* Photo strip (horizontal scrolling row) */
+.photo-strip {
+  display: flex;
+  gap: 4px;
+  overflow: hidden;
+}
+
+.photo-strip-item {
+  flex: 0 0 25%;
+  aspect-ratio: 3/2;
+  overflow: hidden;
+  position: relative;
+}
+
+.photo-strip-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.6s var(--ease-out);
+}
+
+.photo-strip-item:hover img {
+  transform: scale(1.05);
+}
+
+@media (max-width: 768px) {
+  .photo-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .photo-collage {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .collage-item.tall {
+    grid-row: span 1;
+  }
+
+  .culture-banner {
+    height: 280px;
+  }
+
+  .photo-strip-item {
+    flex: 0 0 50%;
+  }
+}
+
+@media (max-width: 480px) {
+  .photo-strip-item {
+    flex: 0 0 80%;
+  }
+}
+
+/* ============================================
    SCROLL ANIMATIONS
    ============================================ */
 .reveal {
