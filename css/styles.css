@@ -2196,3 +2196,69 @@ section {
 
   .btn { padding: 14px 28px; font-size: 0.85rem; }
 }
+
+/* ============================================
+   LEGAL PAGES (Privacy Policy, Terms)
+   ============================================ */
+.legal-content {
+  padding: var(--section-pad) 0;
+  background: var(--cream);
+}
+
+.legal-container {
+  width: var(--container);
+  margin: 0 auto;
+  max-width: 760px;
+}
+
+.legal-container h2 {
+  font-size: clamp(1.3rem, 2vw, 1.6rem);
+  margin-top: 40px;
+  margin-bottom: 14px;
+  color: var(--dark);
+}
+
+.legal-container h2:first-child {
+  margin-top: 0;
+}
+
+.legal-container p {
+  font-size: 0.95rem;
+  color: var(--warm-brown);
+  line-height: 1.85;
+  margin-bottom: 16px;
+}
+
+.legal-container ul {
+  margin-bottom: 16px;
+  padding-left: 0;
+}
+
+.legal-container li {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 6px 0;
+  font-size: 0.95rem;
+  color: var(--warm-brown);
+  line-height: 1.75;
+}
+
+.legal-container li::before {
+  content: '';
+  flex-shrink: 0;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--burnt-orange);
+  margin-top: 10px;
+}
+
+.legal-container a {
+  color: var(--burnt-orange);
+  transition: color 0.3s;
+}
+
+.legal-container a:hover {
+  color: var(--burnt-orange-dark);
+}
