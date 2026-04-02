@@ -1042,10 +1042,12 @@ section {
 }
 
 .footer-social a svg {
-  width: 18px;
-  height: 18px;
-  fill: rgba(248, 243, 236, 0.6);
-  transition: fill 0.3s;
+  width: 20px;
+  height: 20px;
+  stroke: rgba(248, 243, 236, 0.8);
+  fill: none;
+  stroke-width: 1.5;
+  transition: all 0.3s;
 }
 
 .footer-social a:hover {
@@ -1053,7 +1055,40 @@ section {
   background: rgba(192, 94, 42, 0.1);
 }
 
-.footer-social a:hover svg { fill: var(--burnt-orange-light); }
+.footer-social a:hover svg { stroke: var(--burnt-orange-light); }
+
+.footer-social a svg .ig-dot { fill: rgba(248, 243, 236, 0.8); stroke: none; }
+.footer-social a:hover svg .ig-dot { fill: var(--burnt-orange-light); }
+
+/* Footer contact info */
+.footer-contact {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.footer-contact a {
+  font-size: 0.88rem;
+  color: rgba(248, 243, 236, 0.55);
+  transition: color 0.3s;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.footer-contact a:hover { color: var(--burnt-orange-light); }
+
+.footer-contact svg {
+  width: 15px;
+  height: 15px;
+  stroke: rgba(248, 243, 236, 0.45);
+  fill: none;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  flex-shrink: 0;
+}
 
 .footer-bottom {
   display: flex;
