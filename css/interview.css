@@ -276,29 +276,7 @@
 }
 
 .radio-mark {
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  border: 2px solid rgba(44, 32, 22, 0.2);
-  flex-shrink: 0;
-  position: relative;
-  transition: all 0.3s;
-}
-
-.radio-option input:checked ~ .radio-mark {
-  border-color: var(--burnt-orange);
-}
-
-.radio-option input:checked ~ .radio-mark::after {
-  content: '';
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background: var(--burnt-orange);
+  display: none;
 }
 
 .radio-option:has(input:checked) {
