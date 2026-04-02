@@ -984,36 +984,44 @@ section {
 }
 
 .footer-top {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  flex-wrap: wrap;
-  gap: 40px;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: start;
+  gap: 48px;
   padding-bottom: 40px;
   border-bottom: 1px solid rgba(248, 243, 236, 0.08);
   margin-bottom: 32px;
 }
 
 .footer-brand {
-  max-width: 320px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
 .footer-brand .nav-logo {
   color: var(--cream);
-  margin-bottom: 16px;
 }
 
 .footer-tagline {
   font-family: var(--font-display);
-  font-size: 1.1rem;
+  font-size: 1.05rem;
   font-style: italic;
-  color: rgba(248, 243, 236, 0.5);
+  color: rgba(248, 243, 236, 0.45);
   line-height: 1.5;
+}
+
+/* Center column: nav + social */
+.footer-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
 }
 
 .footer-nav {
   display: flex;
-  gap: 40px;
+  gap: 32px;
 }
 
 .footer-nav a {
@@ -1034,7 +1042,7 @@ section {
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  border: 1px solid rgba(248, 243, 236, 0.1);
+  border: 1px solid rgba(248, 243, 236, 0.15);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1060,12 +1068,13 @@ section {
 .footer-social a svg .ig-dot { fill: rgba(248, 243, 236, 0.8); stroke: none; }
 .footer-social a:hover svg .ig-dot { fill: var(--burnt-orange-light); }
 
-/* Footer contact info */
+/* Right column: contact info */
 .footer-contact {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  margin-top: 16px;
+  gap: 12px;
+  align-items: flex-end;
+  justify-self: end;
 }
 
 .footer-contact a {
@@ -1074,15 +1083,15 @@ section {
   transition: color 0.3s;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
 }
 
 .footer-contact a:hover { color: var(--burnt-orange-light); }
 
 .footer-contact svg {
-  width: 15px;
-  height: 15px;
-  stroke: rgba(248, 243, 236, 0.45);
+  width: 16px;
+  height: 16px;
+  stroke: rgba(248, 243, 236, 0.4);
   fill: none;
   stroke-width: 2;
   stroke-linecap: round;
@@ -2165,9 +2174,12 @@ section {
   .contact-inner { flex-direction: column; align-items: flex-start; }
   .contact-info-group { flex-direction: column; gap: 20px; }
 
-  .footer-top { flex-direction: column; }
-  .footer-nav { flex-wrap: wrap; gap: 20px; }
-  .footer-bottom { flex-direction: column; align-items: flex-start; }
+  .footer-top { grid-template-columns: 1fr; gap: 32px; text-align: center; }
+  .footer-center { align-items: center; }
+  .footer-contact { align-items: center; justify-self: center; }
+  .footer-brand { align-items: center; }
+  .footer-nav { flex-wrap: wrap; gap: 20px; justify-content: center; }
+  .footer-bottom { flex-direction: column; align-items: center; text-align: center; }
 
   .form-row { grid-template-columns: 1fr; }
 
