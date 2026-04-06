@@ -1334,7 +1334,6 @@ section {
 
   .photo-strip {
     overflow-x: auto;
-    scroll-snap-type: x mandatory;
     -webkit-overflow-scrolling: touch;
     scroll-behavior: smooth;
     scrollbar-width: none;
@@ -1345,14 +1344,13 @@ section {
   }
 
   .photo-strip-item {
-    flex: 0 0 50%;
-    scroll-snap-align: start;
+    flex: 0 0 75%;
   }
 }
 
 @media (max-width: 480px) {
   .photo-strip-item {
-    flex: 0 0 80%;
+    flex: 0 0 85%;
   }
 }
 
