@@ -170,6 +170,36 @@ document.addEventListener('DOMContentLoaded', () => {
     valueIcons.forEach(icon => iconObserver.observe(icon));
   }
 
+  // --- Mobile Photo Strip Auto-Scroll ---
+  if (window.innerWidth <= 768) {
+    document.querySelectorAll('.photo-strip').forEach(strip => {
+      let scrollInterval;
+      let userInteracting = false;
+
+      function startAutoScroll() {
+        scrollInterval = setInterval(() => {
+          if (userInteracting) return;
+          const maxScroll = strip.scrollWidth - strip.clientWidth;
+          if (strip.scrollLeft >= maxScroll - 1) {
+            strip.scrollTo({ left: 0, behavior: 'smooth' });
+          } else {
+            strip.scrollBy({ left: strip.clientWidth * 0.5, behavior: 'smooth' });
+          }
+        }, 3000);
+      }
+
+      strip.addEventListener('touchstart', () => {
+        userInteracting = true;
+      }, { passive: true });
+
+      strip.addEventListener('touchend', () => {
+        userInteracting = false;
+      }, { passive: true });
+
+      startAutoScroll();
+    });
+  }
+
   // Add icon-pop keyframes dynamically
   const style = document.createElement('style');
   style.textContent = `

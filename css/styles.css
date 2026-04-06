@@ -1204,7 +1204,7 @@ section {
 /* Culture Banner (full-width photo with overlay) */
 .culture-banner {
   position: relative;
-  height: 400px;
+  height: 550px;
   overflow: hidden;
 }
 
@@ -1332,8 +1332,21 @@ section {
     height: 280px;
   }
 
+  .photo-strip {
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
+    scrollbar-width: none;
+  }
+
+  .photo-strip::-webkit-scrollbar {
+    display: none;
+  }
+
   .photo-strip-item {
     flex: 0 0 50%;
+    scroll-snap-align: start;
   }
 }
 
@@ -1957,6 +1970,12 @@ section {
   grid-template-columns: 1fr 1.2fr;
   gap: clamp(40px, 6vw, 80px);
   align-items: start;
+}
+
+/* On desktop, form appears on the right, details on the left */
+@media (min-width: 769px) {
+  .contact-form-wrapper { order: 2; }
+  .contact-details { order: 1; }
 }
 
 .contact-details h2 {
