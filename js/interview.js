@@ -4,6 +4,9 @@
 
 document.addEventListener('DOMContentLoaded', () => {
 
+  const PRESIGN_URL = 'https://n8n-production-f881.up.railway.app/webhook/r2-presign';
+  const WEBHOOK_URL = 'https://n8n-production-f881.up.railway.app/webhook/horizon-first-round-interview';
+
   const form = document.getElementById('interviewForm');
   const successScreen = document.getElementById('successScreen');
   if (!form) return;
@@ -11,16 +14,13 @@ document.addEventListener('DOMContentLoaded', () => {
   // --- Progress Ring ---
   const progressFill = document.querySelector('.progress-ring-fill');
   const progressText = document.querySelector('.progress-text');
-  const circumference = 2 * Math.PI * 19; // r=19 for the smaller ring
-
-  // Update SVG attributes for correct sizing
+  const circumference = 2 * Math.PI * 19;
   if (progressFill) {
     progressFill.setAttribute('r', '19');
     progressFill.setAttribute('cx', '24');
     progressFill.setAttribute('cy', '24');
     progressFill.setAttribute('stroke-dasharray', circumference);
     progressFill.setAttribute('stroke-dashoffset', circumference);
-
     const bgCircle = document.querySelector('.progress-ring-bg');
     if (bgCircle) {
       bgCircle.setAttribute('r', '19');
@@ -33,26 +33,20 @@ document.addEventListener('DOMContentLoaded', () => {
     const fields = form.querySelectorAll('input[required], textarea[required]');
     let filled = 0;
     let total = fields.length;
-
-    // Add video fields to total (2 videos)
     total += 2;
     if (videoFiles.video1) filled++;
     if (videoFiles.video2) filled++;
-
     fields.forEach(field => {
       if (field.type === 'radio') {
         const radioGroup = form.querySelector(`input[name="${field.name}"]:checked`);
         if (radioGroup) filled++;
-        // Count radio group only once
         const radios = form.querySelectorAll(`input[name="${field.name}"][required]`);
         total -= (radios.length - 1);
       } else if (field.value.trim()) {
         filled++;
       }
     });
-
     const percent = Math.round((filled / total) * 100);
-
     if (progressFill) {
       const offset = circumference - (percent / 100) * circumference;
       progressFill.setAttribute('stroke-dashoffset', offset);
@@ -62,14 +56,12 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // Listen for input changes
   form.addEventListener('input', updateProgress);
   form.addEventListener('change', updateProgress);
 
   // --- Slider ---
   const slider = document.getElementById('competitive');
   const sliderVal = document.getElementById('sliderVal');
-
   if (slider && sliderVal) {
     slider.addEventListener('input', () => {
       sliderVal.textContent = slider.value;
@@ -100,7 +92,6 @@ document.addEventListener('DOMContentLoaded', () => {
     let timerInterval = null;
     let startTime = 0;
 
-    // Record button
     if (recordBtn) {
       recordBtn.addEventListener('click', async () => {
         try {
@@ -108,20 +99,14 @@ document.addEventListener('DOMContentLoaded', () => {
           recordingPreview.srcObject = stream;
           controls.style.display = 'none';
           recordingUI.style.display = 'block';
-
           recordedChunks = [];
           mediaRecorder = new MediaRecorder(stream, { mimeType: 'video/webm' });
-
-          mediaRecorder.ondataavailable = (e) => {
-            if (e.data.size > 0) recordedChunks.push(e.data);
-          };
-
+          mediaRecorder.ondataavailable = (e) => { if (e.data.size > 0) recordedChunks.push(e.data); };
           mediaRecorder.onstop = () => {
             const blob = new Blob(recordedChunks, { type: 'video/webm' });
             const url = URL.createObjectURL(blob);
             playback.src = url;
             videoFiles[fieldName] = blob;
-
             recordingUI.style.display = 'none';
             preview.style.display = 'block';
             controls.style.display = 'none';
@@ -129,7 +114,6 @@ document.addEventListener('DOMContentLoaded', () => {
             stopStream();
             updateProgress();
           };
-
           mediaRecorder.start();
           startTimer();
         } catch (err) {
@@ -138,21 +122,15 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     }
 
-    // Stop recording
     if (stopBtn) {
       stopBtn.addEventListener('click', () => {
-        if (mediaRecorder && mediaRecorder.state === 'recording') {
-          mediaRecorder.stop();
-        }
+        if (mediaRecorder && mediaRecorder.state === 'recording') mediaRecorder.stop();
       });
     }
 
-    // Cancel recording
     if (cancelBtn) {
       cancelBtn.addEventListener('click', () => {
-        if (mediaRecorder && mediaRecorder.state === 'recording') {
-          mediaRecorder.stop();
-        }
+        if (mediaRecorder && mediaRecorder.state === 'recording') mediaRecorder.stop();
         recordedChunks = [];
         recordingUI.style.display = 'none';
         controls.style.display = 'flex';
@@ -161,7 +139,6 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     }
 
-    // Remove video
     if (removeBtn) {
       removeBtn.addEventListener('click', () => {
         playback.src = '';
@@ -172,7 +149,6 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     }
 
-    // File upload
     if (fileInput) {
       fileInput.addEventListener('change', (e) => {
         const file = e.target.files[0];
@@ -181,57 +157,38 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     }
 
-    // Drag and drop
     const dropZone = zone.querySelector('.file-drop-zone');
     if (dropZone) {
       ['dragenter', 'dragover'].forEach(evt => {
-        zone.addEventListener(evt, (e) => {
-          e.preventDefault();
-          zone.classList.add('drag-over');
-        });
+        zone.addEventListener(evt, (e) => { e.preventDefault(); zone.classList.add('drag-over'); });
       });
-
       ['dragleave', 'drop'].forEach(evt => {
-        zone.addEventListener(evt, (e) => {
-          e.preventDefault();
-          zone.classList.remove('drag-over');
-        });
+        zone.addEventListener(evt, (e) => { e.preventDefault(); zone.classList.remove('drag-over'); });
       });
-
       zone.addEventListener('drop', (e) => {
         const file = e.dataTransfer.files[0];
-        if (file && file.type.startsWith('video/')) {
-          handleFileUpload(file, fieldName, zone);
-        }
+        if (file && file.type.startsWith('video/')) handleFileUpload(file, fieldName, zone);
       });
     }
 
     function handleFileUpload(file, field, zoneEl) {
-      const maxSize = 500 * 1024 * 1024; // 500MB
-      if (file.size > maxSize) {
-        alert('File is too large. Maximum size is 500MB.');
-        return;
-      }
-
+      const maxSize = 500 * 1024 * 1024;
+      if (file.size > maxSize) { alert('File is too large. Maximum size is 500MB.'); return; }
       const ctrl = zoneEl.querySelector('.video-controls');
       const status = zoneEl.querySelector('.upload-status');
       const filename = zoneEl.querySelector('.upload-filename');
       const progressFillBar = zoneEl.querySelector('.upload-progress-fill');
       const prevEl = zoneEl.querySelector('.video-preview');
       const playbackEl = zoneEl.querySelector('.video-playback');
-
       ctrl.style.display = 'none';
       status.style.display = 'block';
       filename.textContent = file.name + ' (' + (file.size / (1024 * 1024)).toFixed(1) + ' MB)';
-
-      // Simulate upload progress
       let progress = 0;
       const interval = setInterval(() => {
         progress += Math.random() * 25 + 10;
         if (progress >= 100) {
           progress = 100;
           clearInterval(interval);
-
           setTimeout(() => {
             const url = URL.createObjectURL(file);
             playbackEl.src = url;
@@ -255,27 +212,19 @@ document.addEventListener('DOMContentLoaded', () => {
       }, 1000);
     }
 
-    function stopTimer() {
-      clearInterval(timerInterval);
-    }
-
+    function stopTimer() { clearInterval(timerInterval); }
     function stopStream() {
-      if (stream) {
-        stream.getTracks().forEach(track => track.stop());
-        stream = null;
-      }
+      if (stream) { stream.getTracks().forEach(track => track.stop()); stream = null; }
     }
   });
 
   // --- Form Submission ---
-  form.addEventListener('submit', (e) => {
+  form.addEventListener('submit', async (e) => {
     e.preventDefault();
 
-    // Basic validation
+    // Validation
     let valid = true;
     const required = form.querySelectorAll('[required]');
-
-    // Clear previous errors
     form.querySelectorAll('.field-group.error').forEach(fg => fg.classList.remove('error'));
     form.querySelectorAll('.field-error-msg').forEach(msg => msg.remove());
 
@@ -296,33 +245,80 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
 
-    // Check videos
     if (!videoFiles.video1 || !videoFiles.video2) {
       valid = false;
       document.querySelectorAll('.video-question').forEach((vq, i) => {
         const field = i === 0 ? 'video1' : 'video2';
-        if (!videoFiles[field]) {
-          vq.querySelector('.video-upload-zone').style.borderColor = '#e53e3e';
-        }
+        if (!videoFiles[field]) vq.querySelector('.video-upload-zone').style.borderColor = '#e53e3e';
       });
     }
 
     if (!valid) {
       const firstError = form.querySelector('.error, [style*="border-color: rgb(229, 62, 62)"]');
-      if (firstError) {
-        firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }
+      if (firstError) firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
       return;
     }
 
-    // Show success
-    form.style.display = 'none';
-    document.querySelector('.progress-wrapper').style.display = 'none';
-    successScreen.style.display = 'block';
-    successScreen.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    // Disable submit button
+    const submitBtn = form.querySelector('.btn-submit');
+    if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'Submitting…'; }
+
+    try {
+      // Upload videos to R2 via presign
+      async function uploadVideo(file, fieldKey) {
+        const ext = file.name ? file.name.split('.').pop() : 'webm';
+        const presignRes = await fetch(PRESIGN_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ fileName: `${fieldKey}-${Date.now()}.${ext}`, fileType: file.type || 'video/webm' })
+        });
+        const { uploadUrl, publicUrl } = await presignRes.json();
+        await fetch(uploadUrl, {
+          method: 'PUT',
+          headers: { 'Content-Type': file.type || 'video/webm' },
+          body: file
+        });
+        return publicUrl;
+      }
+
+      const [video1Url, video2Url] = await Promise.all([
+        uploadVideo(videoFiles.video1, 'video1'),
+        uploadVideo(videoFiles.video2, 'video2')
+      ]);
+
+      // Post form data to n8n
+      await fetch(WEBHOOK_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          fullName: form.fullName.value,
+          phone: form.phone.value,
+          email: form.email.value,
+          aboutYou: form.aboutYou.value,
+          teamActivity: form.teamActivity.value,
+          highAchiever: form.highAchiever.value,
+          selfDev: form.selfDev.value,
+          valuesRank: form.valuesRank.value,
+          competitive: form.competitive.value,
+          transportation: form.querySelector('input[name="transportation"]:checked')?.value,
+          startDate: form.startDate.value,
+          video1Url,
+          video2Url
+        })
+      });
+
+      // Show success
+      form.style.display = 'none';
+      document.querySelector('.progress-wrapper').style.display = 'none';
+      successScreen.style.display = 'block';
+      successScreen.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+    } catch (err) {
+      console.error('Submission error:', err);
+      alert('Something went wrong submitting your application. Please try again.');
+      if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = 'Submit Application →'; }
+    }
   });
 
-  // Initial progress
   updateProgress();
-
 });
