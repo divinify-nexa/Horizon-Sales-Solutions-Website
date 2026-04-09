@@ -1,0 +1,5 @@
+{
+  "rewrites": [
+    { "source": "/first-round-interview", "destination": "/firstroundinterview.html" }
+  ]
+}
