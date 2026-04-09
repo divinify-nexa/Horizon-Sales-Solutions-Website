@@ -124,19 +124,55 @@ document.addEventListener('DOMContentLoaded', () => {
   // --- Contact Form Handling ---
   const contactForm = document.querySelector('.contact-form');
   if (contactForm) {
-    contactForm.addEventListener('submit', (e) => {
+    contactForm.addEventListener('submit', async (e) => {
       e.preventDefault();
 
       const btn = contactForm.querySelector('.btn');
-      const originalText = btn.textContent;
-      btn.textContent = 'Message Sent!';
-      btn.style.background = 'var(--sage)';
+      const originalHTML = btn.innerHTML;
+      btn.textContent = 'Sending…';
+      btn.disabled = true;
 
-      setTimeout(() => {
-        btn.textContent = originalText;
-        btn.style.background = '';
+      const payload = {
+        fullName:     contactForm.querySelector('#name').value.trim(),
+        phone:        contactForm.querySelector('#phone').value.trim(),
+        email:        contactForm.querySelector('#email').value.trim(),
+        interestedIn: contactForm.querySelector('#interest').value,
+        message:      contactForm.querySelector('#message').value.trim(),
+      };
+
+      try {
+        const res = await fetch(
+          'https://n8n-production-f881.up.railway.app/webhook/horizon-contact-form',
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+          }
+        );
+
+        if (!res.ok) throw new Error('Network response was not ok');
+
+        btn.innerHTML = 'Message Sent! ✓';
+        btn.style.background = 'var(--sage)';
         contactForm.reset();
-      }, 3000);
+
+        setTimeout(() => {
+          btn.innerHTML = originalHTML;
+          btn.style.background = '';
+          btn.disabled = false;
+        }, 3000);
+
+      } catch (err) {
+        console.error('Contact form error:', err);
+        btn.textContent = 'Something went wrong — try again';
+        btn.style.background = '#c0392b';
+
+        setTimeout(() => {
+          btn.innerHTML = originalHTML;
+          btn.style.background = '';
+          btn.disabled = false;
+        }, 3000);
+      }
     });
   }
 
