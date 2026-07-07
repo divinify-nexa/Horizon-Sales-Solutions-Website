@@ -91,34 +91,92 @@ document.addEventListener('DOMContentLoaded', () => {
     let stream = null;
     let timerInterval = null;
     let startTime = 0;
+    let recordingMimeType = '';
+    let recordingCanceled = false;
+
+    // Prefer webm where supported; fall back through the chain. iOS Safari
+    // only supports mp4 — never hard-code webm or the constructor throws.
+    function getSupportedMimeType() {
+      const types = ['video/webm;codecs=vp9,opus', 'video/webm;codecs=vp8,opus', 'video/webm', 'video/mp4'];
+      for (const type of types) { if (window.MediaRecorder && MediaRecorder.isTypeSupported(type)) return type; }
+      return '';
+    }
 
     if (recordBtn) {
       recordBtn.addEventListener('click', async () => {
+        // 1. Camera access — its own try/catch so the error message is accurate.
         try {
-          stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-          recordingPreview.srcObject = stream;
-          controls.style.display = 'none';
-          recordingUI.style.display = 'block';
-          recordedChunks = [];
-          mediaRecorder = new MediaRecorder(stream, { mimeType: 'video/webm' });
-          mediaRecorder.ondataavailable = (e) => { if (e.data.size > 0) recordedChunks.push(e.data); };
-          mediaRecorder.onstop = () => {
-            const blob = new Blob(recordedChunks, { type: 'video/webm' });
-            const url = URL.createObjectURL(blob);
-            playback.src = url;
-            videoFiles[fieldName] = blob;
-            recordingUI.style.display = 'none';
-            preview.style.display = 'block';
-            controls.style.display = 'none';
-            stopTimer();
-            stopStream();
-            updateProgress();
-          };
-          mediaRecorder.start();
-          startTimer();
+          // Constrain to 720p so recorded files are upload-friendly (~4x smaller).
+          try {
+            stream = await navigator.mediaDevices.getUserMedia({ video: { width: { ideal: 1280 }, height: { ideal: 720 }, frameRate: { ideal: 30 } }, audio: true });
+          } catch (constraintErr) {
+            stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+          }
         } catch (err) {
-          alert('Camera access is required to record video. Please allow camera permissions and try again.');
+          alert('Camera access is required to record video. Please allow camera permissions and try again, or use the Upload File option.');
+          return;
         }
+
+        // 2. Recorder creation — separate handling. iOS Safari may reject the
+        // options object (bitrate caps), so fall back progressively.
+        const preferred = getSupportedMimeType();
+        const opts = { videoBitsPerSecond: 2500000, audioBitsPerSecond: 128000 };
+        if (preferred) opts.mimeType = preferred;
+        try {
+          mediaRecorder = new MediaRecorder(stream, opts);
+        } catch (err) {
+          try {
+            mediaRecorder = preferred ? new MediaRecorder(stream, { mimeType: preferred }) : new MediaRecorder(stream);
+          } catch (err2) {
+            try {
+              mediaRecorder = new MediaRecorder(stream);
+            } catch (err3) {
+              stopStream();
+              alert('In-browser recording is not supported on this device. Please use the Upload File option instead.');
+              return;
+            }
+          }
+        }
+        // Store the mimeType the recorder actually used so the file matches it.
+        recordingMimeType = mediaRecorder.mimeType || preferred || 'video/webm';
+        recordingCanceled = false;
+
+        recordingPreview.srcObject = stream;
+        controls.style.display = 'none';
+        recordingUI.style.display = 'block';
+        recordedChunks = [];
+        mediaRecorder.ondataavailable = (e) => { if (e.data && e.data.size > 0) recordedChunks.push(e.data); };
+        mediaRecorder.onstop = () => {
+          stopTimer();
+          stopStream();
+          if (recordingCanceled) {
+            recordedChunks = [];
+            recordingUI.style.display = 'none';
+            controls.style.display = 'flex';
+            return;
+          }
+          const blob = new Blob(recordedChunks, { type: recordingMimeType });
+          // Guard against empty/corrupt captures (the iOS failure mode).
+          // A real 60-90s clip is several MB; under ~50KB means it didn't record.
+          if (blob.size < 51200) {
+            recordingUI.style.display = 'none';
+            controls.style.display = 'flex';
+            alert("That recording didn't capture correctly. Please try again, or use the Upload File option.");
+            return;
+          }
+          const ext = recordingMimeType.includes('webm') ? 'webm' : recordingMimeType.includes('mp4') ? 'mp4' : 'mov';
+          const file = new File([blob], fieldName + '-recording.' + ext, { type: recordingMimeType });
+          const url = URL.createObjectURL(blob);
+          playback.src = url;
+          videoFiles[fieldName] = file;
+          recordingUI.style.display = 'none';
+          preview.style.display = 'block';
+          controls.style.display = 'none';
+          updateProgress();
+        };
+        // No timeslice — iOS Safari emits broken/empty fragments when one is set.
+        mediaRecorder.start();
+        startTimer();
       });
     }
 
@@ -130,12 +188,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (cancelBtn) {
       cancelBtn.addEventListener('click', () => {
-        if (mediaRecorder && mediaRecorder.state === 'recording') mediaRecorder.stop();
-        recordedChunks = [];
-        recordingUI.style.display = 'none';
-        controls.style.display = 'flex';
-        stopTimer();
-        stopStream();
+        // Flag BEFORE stop(): ondataavailable/onstop fire async after stop(),
+        // so clearing chunks here alone doesn't actually cancel the recording.
+        recordingCanceled = true;
+        if (mediaRecorder && mediaRecorder.state === 'recording') {
+          mediaRecorder.stop();
+        } else {
+          recordedChunks = [];
+          recordingUI.style.display = 'none';
+          controls.style.display = 'flex';
+          stopTimer();
+          stopStream();
+        }
       });
     }
 
@@ -264,30 +328,67 @@ document.addEventListener('DOMContentLoaded', () => {
     if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'Submitting…'; }
 
     try {
-      // Upload videos to R2 via presign
-      async function uploadVideo(file, fieldKey) {
+      // Upload videos to R2 via presign — with retry, timeout, progress,
+      // and HTTP status checks (a bare fetch() resolves even on 403/500,
+      // which previously let failed uploads show the success screen).
+      async function uploadVideo(file, fieldKey, label) {
         const ext = file.name ? file.name.split('.').pop() : 'webm';
-        const presignRes = await fetch(PRESIGN_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ fileName: `${fieldKey}-${Date.now()}.${ext}`, fileType: file.type || 'video/webm' })
-        });
-        const { uploadUrl, publicUrl } = await presignRes.json();
-        await fetch(uploadUrl, {
-          method: 'PUT',
-          headers: { 'Content-Type': file.type || 'video/webm' },
-          body: file
-        });
-        return publicUrl;
+        const MAX_ATTEMPTS = 3;
+        let presign = null, lastErr = null;
+
+        for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+          try {
+            if (!presign) {
+              const presignRes = await fetch(PRESIGN_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ fileName: `${fieldKey}-${Date.now()}.${ext}`, fileType: file.type || 'video/webm' })
+              });
+              if (!presignRes.ok) throw new Error('presign_' + presignRes.status);
+              presign = await presignRes.json();
+              if (!presign || !presign.uploadUrl) throw new Error('presign_no_url');
+            }
+
+            const url = await new Promise((resolve, reject) => {
+              const xhr = new XMLHttpRequest();
+              xhr.open('PUT', presign.uploadUrl);
+              xhr.setRequestHeader('Content-Type', file.type || 'video/webm');
+              xhr.timeout = 180000;
+              xhr.upload.onprogress = (e) => {
+                if (e.lengthComputable && submitBtn) {
+                  const pct = Math.round((e.loaded / e.total) * 100);
+                  submitBtn.textContent = 'Uploading ' + label + '… ' + pct + '%';
+                }
+              };
+              xhr.onload = () => {
+                if (xhr.status === 200 || xhr.status === 204) resolve(presign.publicUrl);
+                else reject(new Error('put_' + xhr.status));
+              };
+              xhr.onerror = () => reject(new Error('network_error'));
+              xhr.ontimeout = () => reject(new Error('timeout'));
+              xhr.send(file);
+            });
+            return url;
+          } catch (err) {
+            lastErr = err;
+            if (String(err.message || '').indexOf('presign') === 0) presign = null;
+            if (attempt < MAX_ATTEMPTS) {
+              if (submitBtn) submitBtn.textContent = 'Retrying ' + label + '… (' + (attempt + 1) + ')';
+              await new Promise(r => setTimeout(r, attempt * 1200));
+            }
+          }
+        }
+        throw lastErr || new Error('upload_failed');
       }
 
-      const [video1Url, video2Url] = await Promise.all([
-        uploadVideo(videoFiles.video1, 'video1'),
-        uploadVideo(videoFiles.video2, 'video2')
-      ]);
+      // Sequential so the progress text on the button is meaningful.
+      const video1Url = await uploadVideo(videoFiles.video1, 'video1', 'video 1 of 2');
+      const video2Url = await uploadVideo(videoFiles.video2, 'video2', 'video 2 of 2');
+
+      if (submitBtn) submitBtn.textContent = 'Submitting…';
 
       // Post form data to n8n
-      await fetch(WEBHOOK_URL, {
+      const webhookRes = await fetch(WEBHOOK_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -306,6 +407,7 @@ document.addEventListener('DOMContentLoaded', () => {
           video2Url
         })
       });
+      if (!webhookRes.ok) throw new Error('webhook_' + webhookRes.status);
 
       // Show success
       form.style.display = 'none';
@@ -315,7 +417,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     } catch (err) {
       console.error('Submission error:', err);
-      alert('Something went wrong submitting your application. Please try again.');
+      alert('Something went wrong submitting your application (' + (err && err.message ? err.message : 'unknown') + '). Please check your connection and try again, or email your responses to contact@horizonsalesolutions.com');
       if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = 'Submit Application →'; }
     }
   });
