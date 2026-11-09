@@ -1570,7 +1570,9 @@ section {
 
 .team-full-card {
   display: grid;
-  grid-template-columns: 1fr 1.2fr;
+  /* photo stacked above info at every width: side-by-side, the 3:4 photo sized
+     itself from the tall bio column and squeezed the bio out of the card */
+  grid-template-columns: minmax(0, 1fr);
   gap: 0;
   background: var(--cream);
   border: 1px solid rgba(44, 32, 22, 0.06);
@@ -2134,7 +2136,7 @@ section {
   .services-grid { grid-template-columns: 1fr 1fr; }
   .team-full-grid { grid-template-columns: 1fr; max-width: 500px; margin: 0 auto; }
   .team-full-card { grid-template-columns: 1fr; }
-  .team-full-photo { aspect-ratio: 4/3; }
+  /* keep leadership photos portrait (3/4, same as desktop) at every width */
 }
 
 @media (max-width: 768px) {
