@@ -41,10 +41,11 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // --- Active Nav Link ---
-  const currentPage = window.location.pathname.split('/').pop() || 'index.html';
+  const normalizePath = p => (p.replace(/\.html$/, '').replace(/\/index$/, '/').replace(/(.)\/$/, '$1')) || '/';
+  const currentPage = normalizePath(window.location.pathname);
   document.querySelectorAll('.nav-links a, .mobile-menu a').forEach(link => {
     const href = link.getAttribute('href');
-    if (href === currentPage || (currentPage === '' && href === 'index.html')) {
+    if (href && href.startsWith('/') && normalizePath(href.split('#')[0]) === currentPage) {
       link.classList.add('active');
     }
   });
