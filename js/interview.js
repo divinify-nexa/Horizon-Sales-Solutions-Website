@@ -385,6 +385,9 @@ document.addEventListener('DOMContentLoaded', () => {
       const video1Url = await uploadVideo(videoFiles.video1, 'video1', 'video 1 of 2');
       const video2Url = await uploadVideo(videoFiles.video2, 'video2', 'video 2 of 2');
 
+      // Zerva: attach video links to the intake session
+      try { window.__zervaIntake && window.__zervaIntake.patchFormData({ video1_url: video1Url, video2_url: video2Url }); } catch (_) {}
+
       if (submitBtn) submitBtn.textContent = 'Submitting…';
 
       // Post form data to n8n
@@ -409,6 +412,28 @@ document.addEventListener('DOMContentLoaded', () => {
         })
       });
       if (!webhookRes.ok) throw new Error('webhook_' + webhookRes.status);
+
+      // Zerva: send final answers and mark the session submitted
+      try {
+        if (window.__zervaIntake) {
+          window.__zervaIntake.patchFormData({
+            name: form.fullName.value,
+            email: form.email.value,
+            phone: form.phone.value,
+            about_you: form.aboutYou.value,
+            team_activity: form.teamActivity.value,
+            high_achiever: form.highAchiever.value,
+            self_development: form.selfDev.value,
+            values_rank: form.valuesRank.value,
+            competitive: String(form.competitive.value),
+            transportation: form.querySelector('input[name="transportation"]:checked')?.value || '',
+            start_date: form.startDate.value,
+            video1_url: video1Url,
+            video2_url: video2Url
+          });
+          window.__zervaIntake.markSubmitted();
+        }
+      } catch (_) {}
 
       // Show success
       form.style.display = 'none';
