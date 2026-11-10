@@ -2283,3 +2283,50 @@ section {
 .legal-container a:hover {
   color: var(--burnt-orange-dark);
 }
+
+.legal-container h3 {
+  font-size: clamp(1.1rem, 1.6vw, 1.25rem);
+  margin-top: 28px;
+  margin-bottom: 12px;
+  color: var(--dark);
+}
+
+/* ============================================
+   SMS CONSENT CHECKBOX (A2P 10DLC)
+   ============================================ */
+.sms-consent {
+  margin-bottom: 24px;
+}
+
+.contact-form .sms-consent {
+  margin-bottom: 0;
+}
+
+.sms-consent-label {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-weight: 400;
+  line-height: 1.6;
+  color: var(--warm-brown);
+}
+
+.sms-consent-label input[type="checkbox"] {
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  margin: 2px 0 0;
+  accent-color: var(--burnt-orange);
+  cursor: pointer;
+}
+
+.sms-consent-label a {
+  color: var(--burnt-orange);
+  text-decoration: underline;
+}
+
+.sms-consent-label a:hover {
+  color: var(--burnt-orange-dark);
+}

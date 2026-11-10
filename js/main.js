@@ -2,6 +2,25 @@
    HORIZON SALES & SOLUTIONS — Main JS
    ============================================ */
 
+// --- SMS Consent Fields (A2P 10DLC) ---
+// Returns the SMS consent fields to merge into a form's submission payload.
+// sms_consent_text is read from the rendered label so it always matches what
+// the user saw; sms_consent_at is only set when the box is checked.
+window.HorizonForms = {
+  smsConsentFields(form) {
+    const box = form.querySelector('input[name="sms_consent"]');
+    const text = form.querySelector('.sms-consent-text');
+    const consented = !!(box && box.checked);
+    const fields = {
+      sms_consent: consented,
+      sms_consent_text: text ? text.textContent.replace(/\s+/g, ' ').trim() : ''
+    };
+    if (consented) fields.sms_consent_at = new Date().toISOString();
+    fields.page_url = window.location.href;
+    return fields;
+  }
+};
+
 document.addEventListener('DOMContentLoaded', () => {
 
   // --- Navigation Scroll Effect ---
@@ -139,6 +158,7 @@ document.addEventListener('DOMContentLoaded', () => {
         email:        contactForm.querySelector('#email').value.trim(),
         interestedIn: contactForm.querySelector('#interest').value,
         message:      contactForm.querySelector('#message').value.trim(),
+        ...window.HorizonForms.smsConsentFields(contactForm),
       };
 
       try {

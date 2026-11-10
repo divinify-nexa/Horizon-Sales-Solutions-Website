@@ -404,7 +404,8 @@ document.addEventListener('DOMContentLoaded', () => {
           transportation: form.querySelector('input[name="transportation"]:checked')?.value,
           startDate: form.startDate.value,
           video1Url,
-          video2Url
+          video2Url,
+          ...window.HorizonForms.smsConsentFields(form)
         })
       });
       if (!webhookRes.ok) throw new Error('webhook_' + webhookRes.status);
